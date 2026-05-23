@@ -1,14 +1,24 @@
+using Back.Data;
+using Back.Repositories;
 using SwaggerThemes;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 var builder = WebApplication.CreateBuilder(args);
 
 
-// Add services to the container.
+builder.Services.AddScoped<ILivroRepository, LivroRepository>();
+builder.Services.AddScoped<IAutorRepository, AutorRepository>();
 
-builder.Services.AddSwaggerGen(); 
+//Registrar o DataContext como singleton para manter os dados em memória durante toda a execução da aplicação
+builder.Services.AddSingleton<DataContext>(sp =>
+{
+    var contexto = new DataContext();
+    contexto.InitializeSeedData();
+    return contexto;
+});
+builder.Services.AddSwaggerGen();
 
-builder.Services.AddControllers(); // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddControllers(); 
 
 var app = builder.Build();
 
