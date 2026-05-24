@@ -1,4 +1,5 @@
 using Back.Models;
+using Back.Services;
 
 namespace Back.Data
 {
@@ -113,7 +114,7 @@ namespace Back.Data
             {
                 Id = 1,
                 Email = "admin@biblioteca.com",
-                SenhaHash = "hashed_password_here", // TODO: implementar BCrypt na autenticação
+                SenhaHash = PasswordHasher.Hash("admin123"), 
                 Nome = "Administrador",
                 Perfil = "admin",
                 Ativo = true,
