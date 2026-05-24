@@ -1,89 +1,64 @@
-using Microsoft.AspNetCore.Mvc;
 using Back.Dtos.Autores;
+using Back.Dtos.Livros;
 using Back.Models;
 using Back.Repositories;
-
+using Back.Services;
+using Microsoft.AspNetCore.Mvc;
 namespace Back.Controllers
 {
     [ApiController]
-    [Route("api/v1/autores")]
+    [Route("api/[controller]")]
     public class AutoresController : ControllerBase
     {
+        private readonly IAutorService _autorService;
+        private readonly ILivroService _livroService;
 
-        private readonly IAutorRepository _autorRepository;
-        private readonly ILivroRepository _livroRepository;
-
-        public AutoresController(IAutorRepository autorRepository, ILivroRepository livroRepository)
+        public AutoresController(IAutorService autorService, ILivroService livroService)
         {
-
-            _autorRepository = autorRepository ?? throw new ArgumentNullException(nameof(autorRepository));
-            _livroRepository = livroRepository ?? throw new ArgumentNullException(nameof(livroRepository));
+            _autorService = autorService ?? throw new ArgumentNullException(nameof(autorService));
+            _livroService = livroService ?? throw new ArgumentNullException(nameof(livroService));
         }
 
         /// <summary>
-        /// Lista todos os autores
+        /// Lista todos os autores.
         /// </summary>
+        /// <returns>Retorna lista completa de autores.</returns>
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<Autor>), StatusCodes.Status200OK)]
-
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetAutores()
         {
             try
             {
-                var autores = await _autorRepository.GetAllAsync();
+                var autores = await _autorService.GetAllAsync();
                 return Ok(new { dados = autores, total = autores.Count() });
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { mensagem = "Erro ao buscar autores", erro = ex.Message });
+                return BadRequest(new { mensagem = ex.Message });
             }
         }
-
+        
+        
         /// <summary>
-        /// Obtém um autor por ID
+        /// Obtém um autor por ID, incluindo seus livros.
         /// </summary>
-        /// <param name="id">ID do autor</param>
-        /// <returns>Retorna o autor encontrado</returns>
-
-        [HttpGet("{id}")]
-        [ProducesResponseType(typeof(Autor), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        /// <param name="id">ID numérico do autor.</param>
+        /// <returns>Retorna os detalhes do autor encontrado, incluindo seus livros.</returns>
+        [HttpGet("{id:int}")]
         public async Task<IActionResult> GetAutorById(int id)
         {
             try
             {
-                var autor = await _autorRepository.GetByIdAsync(id);
-                if (id <= 0)
-                    return BadRequest(new { mensagem = "ID inválido" });
-                if (autor == null)
-                {
-                    return NotFound(new { mensagem = $"Autor com ID {id} não encontrado" });
-                }
-                return Ok(autor);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { mensagem = "Erro ao buscar autor", erro = ex.Message });
-            }
-        }
-
-        [HttpGet("{id}/com-livros")]
-        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetAutorWithLivros(int id)
-        {
-            try
-            {
                 if (id <= 0)
                     return BadRequest(new { mensagem = "ID inválido" });
 
-                var autor = await _autorRepository.GetByIdAsync(id);
+                var autor = await _autorService.GetByIdAsync(id);
                 if (autor == null)
-                {
                     return NotFound(new { mensagem = $"Autor com ID {id} não encontrado" });
-                }
 
-                var livros = await _livroRepository.GetByAutorIdAsync(id);
+                var livros = await _livroService.GetByAutorIdAsync(id);
+
                 return Ok(new
                 {
                     autor,
@@ -91,93 +66,85 @@ namespace Back.Controllers
                     totalLivros = livros.Count()
                 });
             }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { mensagem = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new { mensagem = ex.Message });
+            }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { mensagem = "Erro ao buscar autor com livros", erro = ex.Message });
+                return BadRequest(new { mensagem = ex.Message });
             }
         }
 
+
         /// <summary>
-        /// Cria um novo autor. Requer perfil admin.
+        /// Cria um novo autor.
         /// </summary>
-        /// <param name="dto">Dados do autor</param>
-        /// <returns>Retorna o autor criado</returns>
+        /// <param name="dto">Dados para criação do autor.</param>
+        /// <returns>Retorna o autor criado com status 201 Created.</returns>
         [HttpPost]
         [ProducesResponseType(typeof(Autor), StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(Autor), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateAutor([FromBody] CriarAutorDto dto)
         {
             try
             {
-                if (dto == null || string.IsNullOrWhiteSpace(dto.Nome))
-                    return BadRequest(new { mensagem = "Nome do autor é obrigatório" });
+                if (dto == null)
+                    return BadRequest(new { mensagem = "Dados do autor são obrigatórios" });
 
-                var autor = new Autor
-                {
-                    Nome = dto.Nome,
-                    DataNascimento = dto.DataNascimento,
-                    Nacionalidade = dto.Nacionalidade,
-                    Biografia = dto.Biografia
-                };
-
-                var autorCriado = await _autorRepository.CreateAsync(autor);
+                var autorCriado = await _autorService.CreateAsync(dto);
                 return CreatedAtAction(nameof(GetAutorById), new { id = autorCriado.Id }, autorCriado);
             }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { mensagem = ex.Message });
+            }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { mensagem = "Erro ao criar autor", erro = ex.Message });
+                return BadRequest(new { mensagem = ex.Message });
             }
-
         }
 
         /// <summary>
-        /// Obtém um autor por ID
+        /// Obtém um autor por ID.
         /// </summary>
-        /// <param name="id">ID do autor</param>
-        /// <returns>Retorna o autor encontrado</returns>
-
-        [HttpPut("{id}")]
+        /// <param name="id">ID numérico do autor.</param>
+        /// <returns>Retorna os detalhes do autor encontrado.</returns>
+        [HttpPut("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateAutor(int id, [FromBody] AtualizarAutorDto dto)
         {
-
             try
             {
-                if (id <= 0)
-                    return BadRequest(new { mensagem = "ID inválido" });
+                if (dto == null)
+                    return BadRequest(new { mensagem = "Dados do autor são obrigatórios" });
 
-                var autorExistente = await _autorRepository.GetByIdAsync(id);
-                if (autorExistente == null)
-                {
-                    return NotFound(new { mensagem = $"Autor com ID {id} não encontrado" });
-                }
+                var autorAtualizado = await _autorService.UpdateAsync(id, dto);
+                if (autorAtualizado == null)
+                    return NotFound(new { mensagem = $"Autor com ID {id} não encontrado." });
 
-                var autorAtualizado = new Autor
-                {
-                    Id = id,
-                    Nome = dto.Nome,
-                    DataNascimento = dto.DataNascimento,
-                    Nacionalidade = dto.Nacionalidade,
-                    Biografia = dto.Biografia
-                };
-                var resultado = await _autorRepository.UpdateAsync(id, autorAtualizado);
-                if (resultado == null)
-                    return NotFound(new { mensagem = "Erro ao atualizar autor" });
-
-                return Ok(new { mensagem = $"Autor com ID {id} atualizado com sucesso" });
+                return NoContent();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { mensagem = ex.Message });
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { mensagem = "Erro ao atualizar autor", erro = ex.Message });
+                return BadRequest(new { mensagem = ex.Message });
             }
-            throw new NotImplementedException();
         }
 
-        /// <summary>
-        /// Remove um autor. Requer perfil admin.
-        /// </summary>
-        /// <param name="id">ID do autor</param>
-        /// <returns>Retorna mensagem de sucesso</returns>
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:int}")]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteAutor(int id)
         {
             try
@@ -185,32 +152,26 @@ namespace Back.Controllers
                 if (id <= 0)
                     return BadRequest(new { mensagem = "ID inválido" });
 
-                var autorExistente = await _autorRepository.GetByIdAsync(id);
-                if (autorExistente == null)
-                {
-                    return NotFound(new { mensagem = $"Autor com ID {id} não encontrado" });
-                }
-
-                var livrosDoAutor = await _livroRepository.GetByAutorIdAsync(id);
-
-                // Verificar se tem livros associados ao autor
-                if (livrosDoAutor.Any())
-                {
-                    return BadRequest(new { mensagem = "Não é possível deletar um autor que possui livros associados" });
-                }
-
-                var resultado = await _autorRepository.DeleteAsync(id);
-
+                var resultado = await _autorService.DeleteAsync(id);
 
                 if (!resultado)
-                    return NotFound(new { mensagem = "Erro ao deletar autor" });
+                    return NotFound(new { mensagem = $"Autor com ID {id} não encontrado" });
 
-                return Ok(new { mensagem = $"Autor com ID {id} deletado com sucesso" });
+                return Ok(new { mensagem = "Registro deletado com sucesso" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { mensagem = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { mensagem = ex.Message });
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { mensagem = "Erro ao deletar autor", erro = ex.Message });
+                return BadRequest(new { mensagem = ex.Message });
             }
         }
     }
 }
+

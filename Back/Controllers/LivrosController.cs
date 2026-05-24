@@ -1,7 +1,6 @@
-using Back.Dtos.Autores;
 using Back.Dtos.Livros;
 using Back.Models;
-using Back.Repositories;
+using Back.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Back.Controllers
@@ -11,13 +10,11 @@ namespace Back.Controllers
     public class LivrosController : ControllerBase
     {
 
-        private readonly ILivroRepository _livroRepository;
-        private readonly IAutorRepository _autorRepository;
+        private readonly ILivroService _livroService;
 
-        public LivrosController(ILivroRepository livroRepository, IAutorRepository autorRepository)
+        public LivrosController(ILivroService livroService)
         {
-            _livroRepository = livroRepository ?? throw new ArgumentNullException(nameof(livroRepository));
-            _autorRepository = autorRepository ?? throw new ArgumentNullException(nameof(autorRepository));
+            _livroService = livroService ?? throw new ArgumentNullException(nameof(livroService));
         }
 
         /// <summary>
@@ -30,12 +27,12 @@ namespace Back.Controllers
         {
             try
             {
-                var livros = await _livroRepository.GetAllAsync();
+                var livros = await _livroService.GetAllAsync();
                 return Ok(new { dados = livros, total = livros.Count() });
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { mensagem = "Erro ao buscar livros", erro = ex.Message });
+                return BadRequest(new { mensagem = ex.Message });
             }
         }
 
@@ -52,30 +49,21 @@ namespace Back.Controllers
         {
             try
             {
-                if (dto == null || string.IsNullOrWhiteSpace(dto.Titulo))
-                    return BadRequest(new { mensagem = "Título do livro é obrigatório" });
-                if (dto.AutorId <= 0)
-                    return BadRequest(new { mensagem = "ID do autor inválido" });
+                if (dto == null)
+                    return BadRequest(new { mensagem = "Dados do livro são obrigatórios" });
 
-                // Verificar se o autor existe
-                var autorExiste = await _autorRepository.ExistsAsync(dto.AutorId);
-                if (!autorExiste)
-                    return NotFound(new { mensagem = $"Autor com ID {dto.AutorId} não encontrado" });
-
-                var livro = new Livro
-                {
-                    Titulo = dto.Titulo,
-                    AutorId = dto.AutorId,
-                    ISBN = dto.ISBN,
-                    AnoPublicacao = dto.AnoPublicacao,
-                    Editora = dto.Editora,
-                    Sinopse = dto.Sinopse,
-                    Categoria = dto.Categoria
-                };
-
-                var livroCriado = await _livroRepository.CreateAsync(livro);
+                var livroCriado = await _livroService.CreateAsync(dto);
                 return CreatedAtAction(nameof(GetLivroById), new { id = livroCriado.Id }, livroCriado);
             }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { mensagem = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new { mensagem = ex.Message });
+            }
+
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, new { mensagem = "Erro ao criar livro", erro = ex.Message });
@@ -97,11 +85,15 @@ namespace Back.Controllers
                 if (id <= 0)
                     return BadRequest(new { mensagem = "ID inválido" });
 
-                var livro = await _livroRepository.GetByIdAsync(id);
+                var livro = await _livroService.GetByIdAsync(id);
                 if (livro == null)
                     return NotFound(new { mensagem = $"Livro com ID {id} não encontrado" });
 
                 return Ok(livro);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { mensagem = ex.Message });
             }
             catch (Exception ex)
             {
@@ -121,40 +113,28 @@ namespace Back.Controllers
                 if (id <= 0)
                     return BadRequest(new { mensagem = "ID inválido" });
 
-                var livroExistente = await _livroRepository.GetByIdAsync(id);
-                if (livroExistente == null)
-                    return NotFound(new { mensagem = $"Livro com ID {id} não encontrado" });
+                if (dto == null)
+                    return BadRequest(new { mensagem = "Dados para atualização são obrigatórios" });
 
-                // Verificar se o novo autor existe (se foi alterado)
-                if (dto.AutorId.HasValue && dto.AutorId != livroExistente.AutorId)
-                {
-                    var autorExiste = await _autorRepository.ExistsAsync(dto.AutorId.Value);
-                    if (!autorExiste)
-                        return NotFound(new { mensagem = $"Autor com ID {dto.AutorId} não encontrado" });
-                }
+                var resultado = await _livroService.UpdateAsync(id, dto);
+                if (resultado == null)
+                    return NotFound(new { mensagem = "Erro ao atualizar livro" });
 
-                // Atualizar os campos do livro existente com os dados do DTO
-                var livroAtualizado = new Livro
-                {
-                    Id = id,
-                    Titulo = dto.Titulo ?? livroExistente.Titulo,
-                    AutorId = dto.AutorId ?? livroExistente.AutorId,
-                    ISBN = dto.ISBN ?? livroExistente.ISBN,
-                    AnoPublicacao = dto.AnoPublicacao ?? livroExistente.AnoPublicacao,
-                    Editora = dto.Editora ?? livroExistente.Editora,
-                    Sinopse = dto.Sinopse ?? livroExistente.Sinopse,
-                    Categoria = dto.Categoria ?? livroExistente.Categoria
-                };
-
-                var atualizado = await _livroRepository.UpdateAsync(id, livroAtualizado);
-                return Ok(atualizado);
+                return Ok(resultado);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { mensagem = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new { mensagem = ex.Message });
             }
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, new { mensagem = "Erro ao atualizar livro", erro = ex.Message });
             }
 
-            throw new NotImplementedException();
         }
 
         [HttpDelete("{id}")]
@@ -168,12 +148,20 @@ namespace Back.Controllers
                 if (id <= 0)
                     return BadRequest(new { mensagem = "ID inválido" });
 
-                var livroExistente = await _livroRepository.GetByIdAsync(id);
-                if (livroExistente == null)
+                var resultado = await _livroService.DeleteAsync(id);
+
+                if (!resultado)
                     return NotFound(new { mensagem = $"Livro com ID {id} não encontrado" });
 
-                await _livroRepository.DeleteAsync(id);
-                return Ok(new { mensagem = "Livro removido com sucesso" });
+                return Ok(new { mensagem = "Registro deletado com sucesso" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { mensagem = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { mensagem = ex.Message });
             }
             catch (Exception ex)
             {
