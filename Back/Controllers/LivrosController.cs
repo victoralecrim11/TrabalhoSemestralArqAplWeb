@@ -1,6 +1,7 @@
 using Back.Dtos.Livros;
 using Back.Models;
 using Back.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Back.Controllers
@@ -37,11 +38,12 @@ namespace Back.Controllers
         }
 
         /// <summary>
-        /// Cria um novo livro
+        /// Cria um novo livro (Requer perfil Administrador)
         /// </summary>
         /// <param name="dto">Dados do livro</param>
         /// <returns>Retorna o livro criado</returns>
         [HttpPost]
+        [Authorize(Roles = "admin")]
         [ProducesResponseType(typeof(Livro), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -101,8 +103,14 @@ namespace Back.Controllers
             }
         }
 
-
+        /// <summary>
+        /// Atualiza um livro por ID (Requer perfil Administrador)
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="dto"></param>
+        /// <returns></returns>
         [HttpPut("{id}")]
+        [Authorize(Roles = "admin")]
         [ProducesResponseType(typeof(Livro), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -137,7 +145,13 @@ namespace Back.Controllers
 
         }
 
+        /// <summary>
+        /// Deleta um livro por ID (Requer perfil Administrador)
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         [HttpDelete("{id}")]
+        [Authorize(Roles = "admin")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]

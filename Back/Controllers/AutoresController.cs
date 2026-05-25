@@ -3,6 +3,7 @@ using Back.Dtos.Livros;
 using Back.Models;
 using Back.Repositories;
 using Back.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 namespace Back.Controllers
 {
@@ -38,8 +39,8 @@ namespace Back.Controllers
                 return BadRequest(new { mensagem = ex.Message });
             }
         }
-        
-        
+
+
         /// <summary>
         /// Obtém um autor por ID, incluindo seus livros.
         /// </summary>
@@ -87,6 +88,7 @@ namespace Back.Controllers
         /// <param name="dto">Dados para criação do autor.</param>
         /// <returns>Retorna o autor criado com status 201 Created.</returns>
         [HttpPost]
+        [Authorize(Roles = "admin")]
         [ProducesResponseType(typeof(Autor), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(Autor), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateAutor([FromBody] CriarAutorDto dto)
@@ -110,11 +112,12 @@ namespace Back.Controllers
         }
 
         /// <summary>
-        /// Obtém um autor por ID.
+        /// Atualiza um autor por ID.
         /// </summary>
         /// <param name="id">ID numérico do autor.</param>
         /// <returns>Retorna os detalhes do autor encontrado.</returns>
         [HttpPut("{id:int}")]
+        [Authorize(Roles = "admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -142,6 +145,7 @@ namespace Back.Controllers
         }
 
         [HttpDelete("{id:int}")]
+        [Authorize(Roles = "admin")]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

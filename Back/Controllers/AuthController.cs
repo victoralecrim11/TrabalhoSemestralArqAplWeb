@@ -13,9 +13,12 @@ namespace Back.Controllers
     {
         private readonly IUsuarioService _usuarioService;
 
+        private readonly IJwtService _jwtService;
+
         public AuthController(IUsuarioService usuarioService, IJwtService jwtService)
         {
-            _usuarioService = usuarioService;
+            _usuarioService = usuarioService ?? throw new ArgumentNullException(nameof(usuarioService));
+            _jwtService = jwtService ?? throw new ArgumentNullException(nameof(jwtService));
         }
 
 
@@ -26,7 +29,7 @@ namespace Back.Controllers
         /// <returns>Retorna o resultado do usuario recém-criado</returns>
         [HttpPost("registro")]
         [AllowAnonymous]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Registro([FromBody] RegistroDto dto)
         {
@@ -37,9 +40,12 @@ namespace Back.Controllers
                 var usuario = await _usuarioService.RegisterAsync(dto);
 
                 // Retorna o usuário recém-criado junto com o token JWT
+                var token = _jwtService.GerarToken(usuario);
                 return CreatedAtAction(nameof(Registro), new
                 {
                     mensagem = "Usuário registrado com sucesso",
+                    token,
+                    expiraEm = _jwtService.ObterDataExpiracao(),
                     usuario = ToUsuarioResponse(usuario)
                 });
 
@@ -110,15 +116,17 @@ namespace Back.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
-             try
+            try
             {
                 var usuario = await _usuarioService.AuthenticateAsync(dto);
                 if (usuario == null)
                     return Unauthorized(new { mensagem = "Email ou senha inválidos" });
-
+                var token = _jwtService.GerarToken(usuario);
                 return Ok(new
                 {
                     mensagem = "Login realizado com sucesso",
+                    token = _jwtService.GerarToken(usuario),
+                    expiraEm = _jwtService.ObterDataExpiracao(),
                     usuario = ToUsuarioResponse(usuario)
                 });
             }
