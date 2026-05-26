@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Back.ConfigurationJWT;
 using Back.Data;
+using Back.Filters;
 using Back.Repositories;
 using Back.Services;
 using SwaggerThemes;
@@ -55,12 +56,46 @@ builder.Services.AddAuthentication("Bearer")
             RoleClaimType = ClaimTypes.Role,
             ClockSkew = TimeSpan.Zero // Elimina o tempo de tolerância para expiração do token
         };
+
+        options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+        {
+            // Disparado quando o token está ausente ou inválido (401)
+            OnChallenge = async context =>
+            {
+                context.HandleResponse();
+                context.Response.StatusCode = 401;
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync(
+                    System.Text.Json.JsonSerializer.Serialize(new
+                    {
+                        mensagem = "Acesso não autorizado. Você precisa estar autenticado para acessar este recurso.",
+                        dica = "Faça login em /api/v1/auth/login e utilize o token JWT retornado."
+                    })
+                );
+            },
+
+            // Disparado quando o token é válido mas o perfil não tem permissão (403)
+            OnForbidden = async context =>
+            {
+                context.Response.StatusCode = 403;
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync(
+                    System.Text.Json.JsonSerializer.Serialize(new
+                    {
+                        mensagem = "Acesso negado. Você não tem permissão para acessar este recurso.",
+                        dica = "Este endpoint requer perfil de administrador."
+                    })
+                );
+            }
+        };
     });
 
 
 
 builder.Services.AddSwaggerGen(opcoes =>
 {
+    opcoes.OperationFilter<AuthorizeCheckOperationFilter>();
+
     opcoes.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
     {
         Version = "v1",
@@ -78,20 +113,7 @@ builder.Services.AddSwaggerGen(opcoes =>
         In = Microsoft.OpenApi.Models.ParameterLocation.Header,
         Description = "Insira o token JWT no formato: Bearer {seu_token}"
     });
-    opcoes.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
-    {
-        {
-            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-            {
-                Reference = new Microsoft.OpenApi.Models.OpenApiReference
-                {
-                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }
-    });
+
 });
 
 builder.Services.AddControllers();
@@ -111,7 +133,7 @@ if (!app.Environment.IsDevelopment())
     app.UseSwaggerUI(Theme.Dracula);
 }
 
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

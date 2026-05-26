@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Back.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/v1/autores")]
     public class AutoresController : ControllerBase
     {
         private readonly IAutorService _autorService;
@@ -25,6 +25,7 @@ namespace Back.Controllers
         /// </summary>
         /// <returns>Retorna lista completa de autores.</returns>
         [HttpGet]
+        [AllowAnonymous]
         [ProducesResponseType(typeof(IEnumerable<Autor>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetAutores()
@@ -47,6 +48,10 @@ namespace Back.Controllers
         /// <param name="id">ID numérico do autor.</param>
         /// <returns>Retorna os detalhes do autor encontrado, incluindo seus livros.</returns>
         [HttpGet("{id:int}")]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetAutorById(int id)
         {
             try
@@ -83,7 +88,7 @@ namespace Back.Controllers
 
 
         /// <summary>
-        /// Cria um novo autor.
+        /// Cria um novo autor Requer perfil Administrador.
         /// </summary>
         /// <param name="dto">Dados para criação do autor.</param>
         /// <returns>Retorna o autor criado com status 201 Created.</returns>
@@ -91,6 +96,9 @@ namespace Back.Controllers
         [Authorize(Roles = "admin")]
         [ProducesResponseType(typeof(Autor), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(Autor), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> CreateAutor([FromBody] CriarAutorDto dto)
         {
             try
@@ -120,6 +128,8 @@ namespace Back.Controllers
         [Authorize(Roles = "admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateAutor(int id, [FromBody] AtualizarAutorDto dto)
         {
@@ -144,10 +154,17 @@ namespace Back.Controllers
             }
         }
 
+        /// <summary>
+        /// Deleta um livro por ID. Requer perfil admin.
+        /// </summary>
+        /// <param name="id">ID numérico do livro.</param>
+        /// <returns>Retorna mensagem de sucesso.</returns>
         [HttpDelete("{id:int}")]
         [Authorize(Roles = "admin")]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteAutor(int id)
         {
