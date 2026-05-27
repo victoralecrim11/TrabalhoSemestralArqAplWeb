@@ -9,7 +9,7 @@ namespace Back.Controllers
 {
     [ApiController]
     [Route("api/v1/auth")]
-    [Produces("aplication/json")]
+    [Produces("application/json")]
     public class AuthController : ControllerBase
     {
         private readonly IUsuarioService _usuarioService;

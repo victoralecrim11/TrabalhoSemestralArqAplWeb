@@ -9,7 +9,7 @@ namespace Back.Controllers
 {
     [ApiController]
     [Route("api/v1/livros")]
-    [Produces("aplication/json")]
+    [Produces("application/json")]
     public class LivrosController : ControllerBase
     {
 

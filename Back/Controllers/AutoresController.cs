@@ -10,7 +10,7 @@ namespace Back.Controllers
 {
     [ApiController]
     [Route("api/v1/autores")]
-    [Produces("aplication/json")]
+    [Produces("application/json")]
     public class AutoresController : ControllerBase
     {
         private readonly IAutorService _autorService;

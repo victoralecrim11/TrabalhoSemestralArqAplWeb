@@ -3,6 +3,7 @@ using Back.Data;
 using Back.Filters;
 using Back.Repositories;
 using Back.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using SwaggerThemes;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Reflection;
@@ -38,9 +39,24 @@ builder.Services.AddSingleton<DataContext>(sp =>
     return contexto;
 });
 
+// Configura CORS para permitir requisições de qualquer origem, o que é útil durante o desenvolvimento e testes.
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
-// Configura autenticação por Bearer token usando JWT.
-builder.Services.AddAuthentication("Bearer")
+
+// Configura autenticação por Bearer token usando JWT com DefaultChallengeScheme definido.
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
@@ -119,7 +135,7 @@ builder.Services.AddSwaggerGen(opcoes =>
         Scheme = "bearer",
         BearerFormat = "JWT",
         In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Description = "Insira o token JWT no formato: Bearer {seu_token}"
+        Description = "Insira APENAS o token JWT, sem o prefixo 'Bearer'. Ex: eyJhbGci..."
     });
 
 });
@@ -141,6 +157,7 @@ if (!app.Environment.IsDevelopment())
     app.UseSwaggerUI(Theme.Dracula);
 }
 
+app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 
