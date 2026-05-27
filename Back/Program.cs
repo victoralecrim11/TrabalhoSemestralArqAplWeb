@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Back.ConfigurationJWT;
 using Back.Data;
 using Back.Filters;
@@ -6,6 +5,8 @@ using Back.Repositories;
 using Back.Services;
 using SwaggerThemes;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using System.Reflection;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -102,6 +103,13 @@ builder.Services.AddSwaggerGen(opcoes =>
         Title = "Biblioteca API",
         Description = "API para gerenciamento de livros e autores em uma biblioteca"
     });
+
+    // Habilita os comentarios dos Endpoints 
+    opcoes.EnableAnnotations();
+
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    opcoes.IncludeXmlComments(xmlPath);
 
     // Configura o Swagger para aceitar tokens JWT no cabeçalho Authorization e mostra quais Endpoints requerem autenticação.
     opcoes.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme

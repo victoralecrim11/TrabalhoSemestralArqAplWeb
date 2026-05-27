@@ -3,11 +3,13 @@ using Back.Models;
 using Back.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Back.Controllers
 {
     [ApiController]
     [Route("api/v1/livros")]
+    [Produces("aplication/json")]
     public class LivrosController : ControllerBase
     {
 
@@ -22,6 +24,7 @@ namespace Back.Controllers
         /// Lista todos os livros
         /// </summary>
         [HttpGet]
+        [SwaggerOperation(Summary = "Lista livros", Description = "Retorna todos os livros cadastrados.")]
         [ProducesResponseType(typeof(IEnumerable<Livro>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetLivros()
@@ -44,6 +47,7 @@ namespace Back.Controllers
         /// <returns>Retorna o livro criado</returns>
         [HttpPost]
         [Authorize(Roles = "admin")]
+        [SwaggerOperation(Summary = "Cria livro", Description = "Requer perfil admin.")]
         [ProducesResponseType(typeof(Livro), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -80,6 +84,7 @@ namespace Back.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("{id}")]
+        [SwaggerOperation(Summary = "Obtém livro por ID", Description = "Retorna os detalhes de um livro específico com base no ID fornecido.")]
         [ProducesResponseType(typeof(IEnumerable<Livro>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -114,6 +119,7 @@ namespace Back.Controllers
         /// <returns></returns>
         [HttpPut("{id:int}")]
         [Authorize(Roles = "admin")]
+        [SwaggerOperation(Summary = "Atualiza livro por ID", Description = "Requer perfil admin. Atualiza os detalhes de um livro específico com base no ID fornecido.")]
         [ProducesResponseType(typeof(Livro), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -157,6 +163,7 @@ namespace Back.Controllers
         /// <returns></returns>
         [HttpDelete("{id:int}")]
         [Authorize(Roles = "admin")]
+        [SwaggerOperation(Summary = "Deleta livro por ID", Description = "Requer perfil admin. Remove um livro específico com base no ID fornecido.")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]

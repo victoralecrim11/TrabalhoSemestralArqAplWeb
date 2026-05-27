@@ -5,10 +5,12 @@ using Back.Repositories;
 using Back.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 namespace Back.Controllers
 {
     [ApiController]
     [Route("api/v1/autores")]
+    [Produces("aplication/json")]
     public class AutoresController : ControllerBase
     {
         private readonly IAutorService _autorService;
@@ -26,6 +28,7 @@ namespace Back.Controllers
         /// <returns>Retorna lista completa de autores.</returns>
         [HttpGet]
         [AllowAnonymous]
+        [SwaggerOperation(Summary = "Lista autores", Description = "Retorna todos os autores cadastrados.")]
         [ProducesResponseType(typeof(IEnumerable<Autor>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetAutores()
@@ -49,6 +52,7 @@ namespace Back.Controllers
         /// <returns>Retorna os detalhes do autor encontrado, incluindo seus livros.</returns>
         [HttpGet("{id:int}")]
         [AllowAnonymous]
+        [SwaggerOperation(Summary = "Obtém autor por ID", Description = "Retorna os detalhes de um autor específico com base no ID fornecido.")]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -94,6 +98,7 @@ namespace Back.Controllers
         /// <returns>Retorna o autor criado com status 201 Created.</returns>
         [HttpPost]
         [Authorize(Roles = "admin")]
+        [SwaggerOperation(Summary = "Cria autor", Description = "Requer perfil admin.")]
         [ProducesResponseType(typeof(Autor), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(Autor), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -126,6 +131,7 @@ namespace Back.Controllers
         /// <returns>Retorna os detalhes do autor encontrado.</returns>
         [HttpPut("{id:int}")]
         [Authorize(Roles = "admin")]
+        [SwaggerOperation(Summary = "Atualiza autor por ID", Description = "Requer perfil admin. Atualiza os detalhes de um autor específico com base no ID fornecido.")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -155,12 +161,13 @@ namespace Back.Controllers
         }
 
         /// <summary>
-        /// Deleta um livro por ID. Requer perfil admin.
+        /// Deleta um autor por ID. Requer perfil admin.
         /// </summary>
-        /// <param name="id">ID numérico do livro.</param>
+        /// <param name="id">ID numérico do autor.</param>
         /// <returns>Retorna mensagem de sucesso.</returns>
         [HttpDelete("{id:int}")]
         [Authorize(Roles = "admin")]
+        [SwaggerOperation(Summary = "Deleta autor por ID", Description = "Requer perfil admin. Remove um autor específico com base no ID fornecido.")]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
