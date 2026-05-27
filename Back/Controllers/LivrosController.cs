@@ -21,8 +21,9 @@ namespace Back.Controllers
         }
 
         /// <summary>
-        /// Lista todos os livros
+        /// Lista todos os livros.
         /// </summary>
+        /// <returns>Retorna lista completa de livros.</returns>
         [HttpGet]
         [SwaggerOperation(Summary = "Lista livros", Description = "Retorna todos os livros cadastrados.")]
         [ProducesResponseType(typeof(IEnumerable<Livro>), StatusCodes.Status200OK)]
@@ -43,12 +44,12 @@ namespace Back.Controllers
         /// <summary>
         /// Cria um novo livro (Requer perfil Administrador)
         /// </summary>
-        /// <param name="dto">Dados do livro</param>
-        /// <returns>Retorna o livro criado</returns>
+        /// <param name="dto">Dados para criação do livro.</param>
+        /// <returns>Retorna mensagem de sucesso e o livro criado.</returns>
         [HttpPost]
         [Authorize(Roles = "admin")]
-        [SwaggerOperation(Summary = "Cria livro", Description = "Requer perfil admin.")]
-        [ProducesResponseType(typeof(Livro), StatusCodes.Status201Created)]
+        [SwaggerOperation(Summary = "Cria livro", Description = "Requer perfil admin. O livro deve ser vinculado a um autor já cadastrado pelo campo autorId.")]
+        [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -61,7 +62,11 @@ namespace Back.Controllers
                     return BadRequest(new { mensagem = "Dados do livro são obrigatórios" });
 
                 var livroCriado = await _livroService.CreateAsync(dto);
-                return CreatedAtAction(nameof(GetLivroById), new { id = livroCriado.Id }, livroCriado);
+                return CreatedAtAction(nameof(GetLivroById), new { id = livroCriado.Id }, new
+                {
+                    mensagem = "Livro criado com sucesso",
+                    livro = livroCriado
+                });
             }
             catch (ArgumentException ex)
             {
@@ -79,22 +84,19 @@ namespace Back.Controllers
         }
 
         /// <summary>
-        /// Obtém um livro por ID
+        /// Obtém um livro por ID.
         /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
+        /// <param name="id">ID do livro.</param>
+        /// <returns>Retorna os detalhes do livro encontrado.</returns>
         [HttpGet("{id}")]
         [SwaggerOperation(Summary = "Obtém livro por ID", Description = "Retorna os detalhes de um livro específico com base no ID fornecido.")]
-        [ProducesResponseType(typeof(IEnumerable<Livro>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Livro), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetLivroById(int id)
+        public async Task<IActionResult> GetLivroById(string id)
         {
             try
             {
-                if (id <= 0)
-                    return BadRequest(new { mensagem = "ID inválido" });
-
                 var livro = await _livroService.GetByIdAsync(id);
                 if (livro == null)
                     return NotFound(new { mensagem = $"Livro com ID {id} não encontrado" });
@@ -114,24 +116,21 @@ namespace Back.Controllers
         /// <summary>
         /// Atualiza um livro por ID (Requer perfil Administrador)
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="dto"></param>
-        /// <returns></returns>
-        [HttpPut("{id:int}")]
+        /// <param name="id">ID do livro.</param>
+        /// <param name="dto">Dados para atualização do livro.</param>
+        /// <returns>Retorna mensagem de sucesso e o livro atualizado.</returns>
+        [HttpPut("{id}")]
         [Authorize(Roles = "admin")]
         [SwaggerOperation(Summary = "Atualiza livro por ID", Description = "Requer perfil admin. Atualiza os detalhes de um livro específico com base no ID fornecido.")]
-        [ProducesResponseType(typeof(Livro), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> UpdateLivro(int id, [FromBody] AtualizarLivroDto dto)
+        public async Task<IActionResult> UpdateLivro(string id, [FromBody] AtualizarLivroDto dto)
         {
             try
             {
-                if (id <= 0)
-                    return BadRequest(new { mensagem = "ID inválido" });
-
                 if (dto == null)
                     return BadRequest(new { mensagem = "Dados para atualização são obrigatórios" });
 
@@ -139,7 +138,11 @@ namespace Back.Controllers
                 if (resultado == null)
                     return NotFound(new { mensagem = "Erro ao atualizar livro" });
 
-                return Ok(resultado);
+                return Ok(new
+                {
+                    mensagem = "Livro atualizado com sucesso",
+                    livro = resultado
+                });
             }
             catch (ArgumentException ex)
             {
@@ -159,29 +162,26 @@ namespace Back.Controllers
         /// <summary>
         /// Deleta um livro por ID (Requer perfil Administrador)
         /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        [HttpDelete("{id:int}")]
+        /// <param name="id">ID do livro.</param>
+        /// <returns>Retorna mensagem de sucesso.</returns>
+        [HttpDelete("{id}")]
         [Authorize(Roles = "admin")]
         [SwaggerOperation(Summary = "Deleta livro por ID", Description = "Requer perfil admin. Remove um livro específico com base no ID fornecido.")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> DeleteLivro(int id)
+        public async Task<IActionResult> DeleteLivro(string id)
         {
             try
             {
-                if (id <= 0)
-                    return BadRequest(new { mensagem = "ID inválido" });
-
                 var resultado = await _livroService.DeleteAsync(id);
 
                 if (!resultado)
                     return NotFound(new { mensagem = $"Livro com ID {id} não encontrado" });
 
-                return Ok(new { mensagem = "Registro deletado com sucesso" });
+                return Ok(new { mensagem = "Livro deletado com sucesso" });
             }
             catch (ArgumentException ex)
             {

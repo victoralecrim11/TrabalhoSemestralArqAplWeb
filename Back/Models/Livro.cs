@@ -1,21 +1,40 @@
 using System;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace Back.Models
 {
     public class Livro
     {
-        public int Id { get; set; }
-        public required string Titulo { get; set; }
-        public required int AutorId { get; set; }
-        public string? ISBN { get; set; }
-        public int? AnoPublicacao { get; set; }
-        public string? Editora { get; set; }
-        public string? Sinopse { get; set; }
-        public string? Categoria { get; set; }
-        public DateTime DataCriacao { get; set; } = DateTime.UtcNow;
-        public DateTime? DataAtualizacao { get; set; }
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string? Id { get; set; }
 
-        // Foreign key and navigation property
-        public Autor? Autor { get; set; }
+        [BsonElement("titulo")]
+        public required string Titulo { get; set; }
+
+        [BsonElement("autorId")]
+        public required string AutorId { get; set; }
+
+        [BsonElement("isbn")]
+        public string? ISBN { get; set; }
+
+        [BsonElement("anoPublicacao")]
+        public int? AnoPublicacao { get; set; }
+
+        [BsonElement("editora")]
+        public string? Editora { get; set; }
+
+        [BsonElement("sinopse")]
+        public string? Sinopse { get; set; }
+
+        [BsonElement("categoria")]
+        public string? Categoria { get; set; }
+
+        [BsonElement("dataCriacao")]
+        public DateTime DataCriacao { get; set; } = DateTime.UtcNow;
+
+        [BsonElement("dataAtualizacao")]
+        public DateTime? DataAtualizacao { get; set; }
     }
 }

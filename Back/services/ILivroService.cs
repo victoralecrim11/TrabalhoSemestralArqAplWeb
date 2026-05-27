@@ -15,40 +15,14 @@ namespace Back.Services
         /// <returns>Coleção de livros disponíveis</returns>
         Task<IEnumerable<Livro>> GetAllAsync();
 
-        /// <summary>
-        /// Obtém um livro específico por ID com tratamento de erros
-        /// </summary>
-        /// <param name="id">ID do livro</param>
-        /// <returns>Livro encontrado ou null se não existir</returns>
-        Task<Livro?> GetByIdAsync(int id);
+        Task<Livro?> GetByIdAsync(string id);
 
-        /// <summary>
-        /// Obtém todos os livros de um autor específico
-        /// </summary>
-        /// <param name="autorId">ID do autor</param>
-        /// <returns>Coleção de livros do autor</returns>
-        Task<IEnumerable<Livro>> GetByAutorIdAsync(int autorId);
+        Task<IEnumerable<Livro>> GetByAutorIdAsync(string autorId);
 
-        /// <summary>
-        /// Cria um novo livro com validações de negócio
-        /// </summary>
-        /// <param name="dto">DTO com dados do livro</param>
-        /// <returns>Livro criado com ID gerado</returns>
         Task<Livro> CreateAsync(CriarLivroDto dto);
 
-        /// <summary>
-        /// Atualiza um livro existente
-        /// </summary>
-        /// <param name="id">ID do livro a atualizar</param>
-        /// <param name="dto">DTO com novos dados</param>
-        /// <returns>Livro atualizado</returns>
-        Task<Livro?> UpdateAsync(int id, AtualizarLivroDto dto);
+        Task<Livro?> UpdateAsync(string id, AtualizarLivroDto dto);
 
-        /// <summary>
-        /// Deleta um livro
-        /// </summary>
-        /// <param name="id">ID do livro a deletar</param>
-        /// <returns>True se deletado com sucesso, false caso contrário</returns>
-        Task<bool> DeleteAsync(int id);
+        Task<bool> DeleteAsync(string id);
     }
 }

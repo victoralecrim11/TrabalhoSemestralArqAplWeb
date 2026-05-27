@@ -1,19 +1,31 @@
 using System;
-using System.Collections.Generic;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace Back.Models
 {
     public class Autor
     {
-        public int Id { get; set; }
-        public required string Nome { get; set; }
-        public DateTime? DataNascimento { get; set; }
-        public string? Nacionalidade { get; set; }
-        public string? Biografia { get; set; }
-        public DateTime DataCriacao { get; set; } = DateTime.UtcNow;
-        public DateTime? DataAtualizacao { get; set; }
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string? Id { get; set; }
 
-        // Navigation property
-        public ICollection<Livro>? Livros { get; set; }
+        [BsonElement("nome")]
+        public required string Nome { get; set; }
+
+        [BsonElement("dataNascimento")]
+        public DateTime? DataNascimento { get; set; }
+
+        [BsonElement("nacionalidade")]
+        public string? Nacionalidade { get; set; }
+
+        [BsonElement("biografia")]
+        public string? Biografia { get; set; }
+
+        [BsonElement("dataCriacao")]
+        public DateTime DataCriacao { get; set; } = DateTime.UtcNow;
+
+        [BsonElement("dataAtualizacao")]
+        public DateTime? DataAtualizacao { get; set; }
     }
 }

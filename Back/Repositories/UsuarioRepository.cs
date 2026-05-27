@@ -12,7 +12,8 @@ namespace Back.Repositories
 
         public UsuarioRepository(DataContext context)
         {
-            _context = context;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+
         }
 
         /// <summary>
@@ -24,47 +25,35 @@ namespace Back.Repositories
             return Task.FromResult(usuarios);
         }
 
-        /// <summary>
-        /// Obtém um usuário por ID
-        /// </summary>
-        public Task<Usuario?> GetByIdAsync(int id)
+        public Task<Usuario?> GetByIdAsync(string id)
         {
             var usuario = _context.Usuarios.FirstOrDefault(u => u.Id == id);
             return Task.FromResult(usuario);
         }
 
-        /// <summary>
-        /// Obtém um usuário por email
-        /// </summary>
         public Task<Usuario?> GetByEmailAsync(string email)
         {
+            // Log temporário para depuração
+            Console.WriteLine($"[DEBUG] Procurando email: '{email}'");
+            Console.WriteLine($"[DEBUG] Usuários na memória: {_context.Usuarios.Count}");
+            foreach (var u in _context.Usuarios)
+            {
+                Console.WriteLine($"[DEBUG] Usuario: Id='{u.Id}', Email='{u.Email}'");
+            }
+
             var usuario = _context.Usuarios.FirstOrDefault(u => u.Email == email);
+            Console.WriteLine(usuario == null ? "[DEBUG] Usuario não encontrado" : $"[DEBUG] Usuario encontrado: {usuario.Email}");
             return Task.FromResult(usuario);
         }
 
-        /// <summary>
-        /// Cria um novo usuário
-        /// </summary>
         public Task<Usuario> CreateAsync(Usuario usuario)
         {
-            if (_context.Usuarios.Count == 0)
-            {
-                usuario.Id = 1;
-            }
-            else
-            {
-                usuario.Id = _context.Usuarios.Max(u => u.Id) + 1;
-            }
-
             usuario.DataCriacao = DateTime.UtcNow;
             _context.Usuarios.Add(usuario);
             return Task.FromResult(usuario);
         }
 
-        /// <summary>
-        /// Atualiza um usuário existente
-        /// </summary>
-        public Task<Usuario?> UpdateAsync(int id, Usuario usuario)
+        public Task<Usuario?> UpdateAsync(string id, Usuario usuario)
         {
             var usuarioExistente = _context.Usuarios.FirstOrDefault(u => u.Id == id);
 
@@ -81,10 +70,7 @@ namespace Back.Repositories
             return Task.FromResult((Usuario?)usuarioExistente);
         }
 
-        /// <summary>
-        /// Deleta um usuário
-        /// </summary>
-        public Task<bool> DeleteAsync(int id)
+        public Task<bool> DeleteAsync(string id)
         {
             var usuario = _context.Usuarios.FirstOrDefault(u => u.Id == id);
 
@@ -95,10 +81,7 @@ namespace Back.Repositories
             return Task.FromResult(true);
         }
 
-        /// <summary>
-        /// Verifica se um usuário existe
-        /// </summary>
-        public Task<bool> ExistsAsync(int id)
+        public Task<bool> ExistsAsync(string id)
         {
             var existe = _context.Usuarios.Any(u => u.Id == id);
             return Task.FromResult(existe);

@@ -81,12 +81,12 @@ namespace Back.Services
             }
         }
 
-        public async Task<Usuario?> GetByIdAsync(int id)
+        public async Task<Usuario?> GetByIdAsync(string id)
         {
             try
             {
-                if (id <= 0)
-                    throw new ArgumentException("ID do usuário deve ser maior que 0", nameof(id));
+                if (string.IsNullOrEmpty(id))
+                    throw new ArgumentException("ID do usuário é obrigatório", nameof(id));
 
                 return await _usuarioRepository.GetByIdAsync(id);
             }

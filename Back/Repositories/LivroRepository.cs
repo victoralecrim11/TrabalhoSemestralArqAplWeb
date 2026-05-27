@@ -3,9 +3,6 @@ using Back.Models;
 
 namespace Back.Repositories
 {
-    /// <summary>
-    /// Implementação do repository para Livros usando DataContext em memória
-    /// </summary>
     public class LivroRepository : ILivroRepository
     {
         private readonly DataContext _context;
@@ -15,56 +12,32 @@ namespace Back.Repositories
             _context = context;
         }
 
-        /// <summary>
-        /// Obtém todos os livros
-        /// </summary>
         public Task<IEnumerable<Livro>> GetAllAsync()
         {
             var livros = _context.Livros.AsEnumerable();
             return Task.FromResult(livros);
         }
 
-        /// <summary>
-        /// Obtém um livro por ID
-        /// </summary>
-        public Task<Livro?> GetByIdAsync(int id)
+        public Task<Livro?> GetByIdAsync(string id)
         {
             var livro = _context.Livros.FirstOrDefault(l => l.Id == id);
             return Task.FromResult(livro);
         }
 
-        /// <summary>
-        /// Obtém livros por ID do autor
-        /// </summary>
-        public Task<IEnumerable<Livro>> GetByAutorIdAsync(int autorId)
+        public Task<IEnumerable<Livro>> GetByAutorIdAsync(string autorId)
         {
             var livros = _context.Livros.Where(l => l.AutorId == autorId).AsEnumerable();
             return Task.FromResult(livros);
         }
 
-        /// <summary>
-        /// Cria um novo livro
-        /// </summary>
         public Task<Livro> CreateAsync(Livro livro)
         {
-            if (_context.Livros.Count == 0)
-            {
-                livro.Id = 1;
-            }
-            else
-            {
-                livro.Id = _context.Livros.Max(l => l.Id) + 1;
-            }
-
             livro.DataCriacao = DateTime.UtcNow;
             _context.Livros.Add(livro);
             return Task.FromResult(livro);
         }
 
-        /// <summary>
-        /// Atualiza um livro existente
-        /// </summary>
-        public Task<Livro?> UpdateAsync(int id, Livro livro)
+        public Task<Livro?> UpdateAsync(string id, Livro livro)
         {
             var livroExistente = _context.Livros.FirstOrDefault(l => l.Id == id);
 
@@ -83,10 +56,7 @@ namespace Back.Repositories
             return Task.FromResult((Livro?)livroExistente);
         }
 
-        /// <summary>
-        /// Deleta um livro
-        /// </summary>
-        public Task<bool> DeleteAsync(int id)
+        public Task<bool> DeleteAsync(string id)
         {
             var livro = _context.Livros.FirstOrDefault(l => l.Id == id);
 
@@ -97,10 +67,7 @@ namespace Back.Repositories
             return Task.FromResult(true);
         }
 
-        /// <summary>
-        /// Verifica se um livro existe
-        /// </summary>
-        public Task<bool> ExistsAsync(int id)
+        public Task<bool> ExistsAsync(string id)
         {
             var existe = _context.Livros.Any(l => l.Id == id);
             return Task.FromResult(existe);

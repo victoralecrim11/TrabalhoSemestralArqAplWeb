@@ -11,14 +11,6 @@ using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Adiciona os serviços necessários para a aplicação, incluindo os serviços de negócio e repositórios.
-builder.Services.AddScoped<ILivroService, LivroService>();
-builder.Services.AddScoped<IAutorService, AutorService>();
-builder.Services.AddScoped<IUsuarioService, UsuarioService>();
-builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
-builder.Services.AddScoped<ILivroRepository, LivroRepository>();
-builder.Services.AddScoped<IAutorRepository, AutorRepository>();
-
 // Carrega a seção JwtSettings do appsettings.json.
 var configuracoesJwt = builder.Configuration.GetSection("JwtSettings");
 var jwtSettings = configuracoesJwt.Get<JwtSettings>()
@@ -31,13 +23,47 @@ ValidarConfiguracoesJWT.ValidateJwtConfigurations(jwtSettings);
 builder.Services.Configure<JwtSettings>(configuracoesJwt);
 builder.Services.AddScoped<IJwtService, JwtService>();
 
-//Registrar o DataContext como singleton para manter os dados em memória durante toda a execução da aplicação
-builder.Services.AddSingleton<DataContext>(sp =>
+// Configura o MongoDB se as configurações estiverem presentes, caso contrário, utiliza o DataContext em memória.
+var mongoSection = builder.Configuration.GetSection("MongoSettings");
+
+if (mongoSection.Exists())
 {
-    var contexto = new DataContext();
-    contexto.InitializeSeedData();
-    return contexto;
-});
+    builder.Services.Configure<MongoDbSettings>(
+    builder.Configuration.GetSection(mongoSection.Key));
+    builder.Services.AddSingleton<MongoDbContext>();
+    builder.Services.AddScoped<IUsuarioRepository, MongoUsuarioRepository>();
+    builder.Services.AddScoped<ILivroRepository, MongoLivroRepository>();
+    builder.Services.AddScoped<IAutorRepository, MongoAutorRepository>();
+    builder.Services.AddScoped<MongoSeeder>();
+}
+
+// Registrar DataContext como singleton (em memória) apenas se Mongo não estiver configurado
+if (!mongoSection.Exists())
+{
+    //Registrar o DataContext como singleton para manter os dados em memória durante toda a execução da aplicação
+    builder.Services.AddSingleton<DataContext>(sp =>
+    {
+        var contexto = new DataContext();
+        contexto.InitializeSeedData();
+        return contexto;
+    });
+}
+
+// Registrar repositórios com ciclo de vida Scoped (somente se Mongo não estiver configurado)
+if (!mongoSection.Exists())
+{
+    builder.Services.AddScoped<ILivroRepository, LivroRepository>();
+    builder.Services.AddScoped<IAutorRepository, AutorRepository>();
+    builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+}
+
+
+// Adiciona os serviços necessários para a aplicação, incluindo os serviços de negócio para livros, autores e usuários.
+builder.Services.AddScoped<ILivroService, LivroService>();
+builder.Services.AddScoped<IAutorService, AutorService>();
+builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+
+
 
 // Configura CORS para permitir requisições de qualquer origem, o que é útil durante o desenvolvimento e testes.
 builder.Services.AddCors(options =>
@@ -71,27 +97,58 @@ builder.Services.AddAuthentication(options =>
                 System.Text.Encoding.UTF8.GetBytes(jwtSettings.ChaveSecreta)),
             NameClaimType = ClaimTypes.NameIdentifier,
             RoleClaimType = ClaimTypes.Role,
-            ClockSkew = TimeSpan.Zero // Elimina o tempo de tolerância para expiração do token
+            ClockSkew = TimeSpan.FromMinutes(1)
         };
 
         options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
         {
-            // Disparado quando o token está ausente ou inválido (401)
+            OnMessageReceived = context =>
+            {
+                var authorization = context.Request.Headers.Authorization.ToString();
+                if (string.IsNullOrWhiteSpace(authorization))
+                    return Task.CompletedTask;
+
+                var token = authorization.Trim();
+                while (token.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                    token = token["Bearer ".Length..].Trim();
+
+                context.Token = token.Trim('"');
+                return Task.CompletedTask;
+            },
+            OnAuthenticationFailed = context =>
+            {
+                context.HttpContext.Items["AuthError"] = context.Exception;
+                return Task.CompletedTask;
+            },
             OnChallenge = async context =>
             {
                 context.HandleResponse();
                 context.Response.StatusCode = 401;
                 context.Response.ContentType = "application/json";
+
+                var mensagem = "Acesso não autorizado. Você precisa estar autenticado para acessar este recurso.";
+                var dica = "Faça login em /api/v1/auth/login e utilize o token JWT retornado.";
+
+                if (context.HttpContext.Items["AuthError"] is Microsoft.IdentityModel.Tokens.SecurityTokenExpiredException)
+                {
+                    mensagem = "Token expirado.";
+                    dica = "Faça login novamente em /api/v1/auth/login e atualize o token no Swagger.";
+                }
+                else if (context.HttpContext.Items.ContainsKey("AuthError"))
+                {
+                    mensagem = "Token inválido.";
+                    dica = "Informe apenas o JWT retornado no login. No Swagger, não digite o prefixo Bearer.";
+                }
+
                 await context.Response.WriteAsync(
                     System.Text.Json.JsonSerializer.Serialize(new
                     {
-                        mensagem = "Acesso não autorizado. Você precisa estar autenticado para acessar este recurso.",
-                        dica = "Faça login em /api/v1/auth/login e utilize o token JWT retornado."
+                        mensagem,
+                        dica
                     })
                 );
             },
 
-            // Disparado quando o token é válido mas o perfil não tem permissão (403)
             OnForbidden = async context =>
             {
                 context.Response.StatusCode = 403;
@@ -143,6 +200,16 @@ builder.Services.AddSwaggerGen(opcoes =>
 builder.Services.AddControllers();
 
 var app = builder.Build();
+
+// Executar seeding do MongoDB se estiver configurado.
+if (mongoSection.Exists())
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var seeder = scope.ServiceProvider.GetRequiredService<MongoSeeder>();
+        await seeder.SeedAsync();
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

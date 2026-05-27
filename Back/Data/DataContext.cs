@@ -24,7 +24,6 @@ namespace Back.Data
             // Criar alguns autores de seed
             var autor1 = new Autor
             {
-                Id = 1,
                 Nome = "Machado de Assis",
                 DataNascimento = new DateTime(1839, 6, 21),
                 Nacionalidade = "Brasileira",
@@ -34,7 +33,6 @@ namespace Back.Data
 
             var autor2 = new Autor
             {
-                Id = 2,
                 Nome = "Clarice Lispector",
                 DataNascimento = new DateTime(1920, 12, 10),
                 Nacionalidade = "Brasileira",
@@ -44,7 +42,6 @@ namespace Back.Data
 
             var autor3 = new Autor
             {
-                Id = 3,
                 Nome = "Jorge Amado",
                 DataNascimento = new DateTime(1912, 8, 10),
                 Nacionalidade = "Brasileira",
@@ -57,9 +54,8 @@ namespace Back.Data
             // Criar alguns livros de seed
             var livro1 = new Livro
             {
-                Id = 1,
                 Titulo = "Dom Casmurro",
-                AutorId = 1,
+                AutorId = autor1.Id ?? "autor1",
                 ISBN = "978-8535928784",
                 AnoPublicacao = 1899,
                 Editora = "Companhia das Letras",
@@ -70,9 +66,8 @@ namespace Back.Data
 
             var livro2 = new Livro
             {
-                Id = 2,
                 Titulo = "Memórias Póstumas de Brás Cubas",
-                AutorId = 1,
+                AutorId = autor1.Id ?? "autor1",
                 ISBN = "978-8535914842",
                 AnoPublicacao = 1881,
                 Editora = "Companhia das Letras",
@@ -83,9 +78,8 @@ namespace Back.Data
 
             var livro3 = new Livro
             {
-                Id = 3,
                 Titulo = "A Hora da Estrela",
-                AutorId = 2,
+                AutorId = autor2.Id ?? "autor2",
                 ISBN = "978-8525407288",
                 AnoPublicacao = 1977,
                 Editora = "Rocco",
@@ -96,9 +90,8 @@ namespace Back.Data
 
             var livro4 = new Livro
             {
-                Id = 4,
                 Titulo = "Capitães da Areia",
-                AutorId = 3,
+                AutorId = autor3.Id ?? "autor3",
                 ISBN = "978-8501925537",
                 AnoPublicacao = 1937,
                 Editora = "Companhia das Letras",
@@ -112,7 +105,6 @@ namespace Back.Data
             // Criar um usuário admin de seed
             var usuarioAdmin = new Usuario
             {
-                Id = 1,
                 Email = "admin@biblioteca.com",
                 SenhaHash = PasswordHasher.Hash("admin123"), 
                 Nome = "Administrador",

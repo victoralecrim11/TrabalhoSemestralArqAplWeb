@@ -47,20 +47,14 @@ namespace Back.Services
             }
         }
 
-        /// <summary>
-        /// Obtém um autor específico por ID
-        /// </summary>
-        public async Task<Autor?> GetByIdAsync(int id)
+        public async Task<Autor?> GetByIdAsync(string id)
         {
             try
             {
-                // Valida se o ID fornecido é válido (maior que 0)
-                if (id <= 0)
-                    throw new ArgumentException("ID do autor deve ser maior que 0", nameof(id));
+                if (string.IsNullOrWhiteSpace(id))
+                    throw new ArgumentException("ID do autor não pode ser vazio", nameof(id));
 
-                // Busca o autor no repositório
                 var autor = await _autorRepository.GetByIdAsync(id);
-                // Retorna o autor encontrado ou null se não existir
                 return autor;
             }
             catch (ArgumentException)
@@ -124,53 +118,37 @@ namespace Back.Services
             }
         }
 
-        /// <summary>
-        /// Atualiza um autor existente
-        /// </summary>
-        public async Task<Autor?> UpdateAsync(int id, AtualizarAutorDto dto)
+        public async Task<Autor?> UpdateAsync(string id, AtualizarAutorDto dto)
         {
             try
             {
-                // Valida se o ID fornecido é válido
-                if (id <= 0)
-                    throw new ArgumentException("ID do autor deve ser maior que 0", nameof(id));
+                if (string.IsNullOrWhiteSpace(id))
+                    throw new ArgumentException("ID do autor não pode ser vazio", nameof(id));
 
-                // Valida se o DTO foi fornecido
                 if (dto == null)
                     throw new ArgumentNullException(nameof(dto), "Dados de atualização são obrigatórios");
 
-                // Valida se pelo menos o nome foi fornecido na atualização
                 if (string.IsNullOrWhiteSpace(dto.Nome))
                     throw new ArgumentException("Nome do autor é obrigatório", nameof(dto.Nome));
 
-                // Valida comprimento mínimo do nome
                 if (dto.Nome.Length < 3)
                     throw new ArgumentException("Nome do autor deve ter no mínimo 3 caracteres", nameof(dto.Nome));
 
-                // Busca o autor existente
                 var autorExistente = await _autorRepository.GetByIdAsync(id);
-                // Verifica se o autor foi encontrado
+
                 if (autorExistente == null)
                     throw new InvalidOperationException($"Autor com ID {id} não encontrado");
 
-                // Cria um objeto Autor com os dados atualizados
                 var autorAtualizado = new Autor
                 {
-                    // Mantém o ID do autor
                     Id = id,
-                    // Usa o novo nome fornecido
                     Nome = dto.Nome ?? autorExistente.Nome,
-                    // Usa a nova data de nascimento ou mantém a existente
                     DataNascimento = dto.DataNascimento ?? autorExistente.DataNascimento,
-                    // Usa a nova nacionalidade ou mantém a existente
                     Nacionalidade = dto.Nacionalidade ?? autorExistente.Nacionalidade,
-                    // Usa a nova biografia ou mantém a existente
                     Biografia = dto.Biografia ?? autorExistente.Biografia
                 };
 
-                // Chama o repositório para atualizar o autor
                 var resultado = await _autorRepository.UpdateAsync(id, autorAtualizado);
-                // Retorna o autor atualizado
                 return resultado;
             }
             catch (ArgumentException)
@@ -190,33 +168,24 @@ namespace Back.Services
             }
         }
 
-        /// <summary>
-        /// Deleta um autor com verificação de integridade referencial (livros associados)
-        /// </summary>
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(string id)
         {
             try
             {
-                // Valida se o ID fornecido é válido
-                if (id <= 0)
-                    throw new ArgumentException("ID do autor deve ser maior que 0", nameof(id));
+                if (string.IsNullOrWhiteSpace(id))
+                    throw new ArgumentException("ID do autor não pode ser vazio", nameof(id));
 
-                // Verifica se o autor existe antes de tentar deletar
                 var autorExiste = await _autorRepository.ExistsAsync(id);
                 if (!autorExiste)
                     throw new InvalidOperationException($"Autor com ID {id} não encontrado");
 
-                // Verifica se o autor possui livros associados (integridade referencial)
                 var temLivros = await _autorRepository.HasLivrosAsync(id);
                 if (temLivros)
-                    // Impede a deleção de autores que possuem livros
                     throw new InvalidOperationException(
                         $"Não é possível deletar o autor {id} pois possui livros associados. " +
                         "Remova os livros primeiro ou atualize sua autoria.");
 
-                // Chama o repositório para deletar o autor
                 var resultado = await _autorRepository.DeleteAsync(id);
-                // Retorna o resultado da deleção (true se sucesso)
                 return resultado;
             }
             catch (ArgumentException)

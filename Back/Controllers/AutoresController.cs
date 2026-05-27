@@ -50,19 +50,16 @@ namespace Back.Controllers
         /// </summary>
         /// <param name="id">ID numérico do autor.</param>
         /// <returns>Retorna os detalhes do autor encontrado, incluindo seus livros.</returns>
-        [HttpGet("{id:int}")]
+        [HttpGet("{id}")]
         [AllowAnonymous]
         [SwaggerOperation(Summary = "Obtém autor por ID", Description = "Retorna os detalhes de um autor específico com base no ID fornecido.")]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetAutorById(int id)
+        public async Task<IActionResult> GetAutorById(string id)
         {
             try
             {
-                if (id <= 0)
-                    return BadRequest(new { mensagem = "ID inválido" });
-
                 var autor = await _autorService.GetByIdAsync(id);
                 if (autor == null)
                     return NotFound(new { mensagem = $"Autor com ID {id} não encontrado" });
@@ -95,12 +92,12 @@ namespace Back.Controllers
         /// Cria um novo autor Requer perfil Administrador.
         /// </summary>
         /// <param name="dto">Dados para criação do autor.</param>
-        /// <returns>Retorna o autor criado com status 201 Created.</returns>
+        /// <returns>Retorna mensagem de sucesso e o autor criado.</returns>
         [HttpPost]
         [Authorize(Roles = "admin")]
         [SwaggerOperation(Summary = "Cria autor", Description = "Requer perfil admin.")]
-        [ProducesResponseType(typeof(Autor), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(Autor), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -112,7 +109,11 @@ namespace Back.Controllers
                     return BadRequest(new { mensagem = "Dados do autor são obrigatórios" });
 
                 var autorCriado = await _autorService.CreateAsync(dto);
-                return CreatedAtAction(nameof(GetAutorById), new { id = autorCriado.Id }, autorCriado);
+                return CreatedAtAction(nameof(GetAutorById), new { id = autorCriado.Id }, new
+                {
+                    mensagem = "Autor criado com sucesso",
+                    autor = autorCriado
+                });
             }
             catch (ArgumentException ex)
             {
@@ -128,16 +129,17 @@ namespace Back.Controllers
         /// Atualiza um autor por ID.
         /// </summary>
         /// <param name="id">ID numérico do autor.</param>
-        /// <returns>Retorna os detalhes do autor encontrado.</returns>
-        [HttpPut("{id:int}")]
+        /// <param name="dto">Dados para atualização do autor.</param>
+        /// <returns>Retorna mensagem de sucesso e o autor atualizado.</returns>
+        [HttpPut("{id}")]
         [Authorize(Roles = "admin")]
         [SwaggerOperation(Summary = "Atualiza autor por ID", Description = "Requer perfil admin. Atualiza os detalhes de um autor específico com base no ID fornecido.")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateAutor(int id, [FromBody] AtualizarAutorDto dto)
+        public async Task<IActionResult> UpdateAutor(string id, [FromBody] AtualizarAutorDto dto)
         {
             try
             {
@@ -148,7 +150,11 @@ namespace Back.Controllers
                 if (autorAtualizado == null)
                     return NotFound(new { mensagem = $"Autor com ID {id} não encontrado." });
 
-                return NoContent();
+                return Ok(new
+                {
+                    mensagem = "Autor atualizado com sucesso",
+                    autor = autorAtualizado
+                });
             }
             catch (ArgumentException ex)
             {
@@ -165,7 +171,7 @@ namespace Back.Controllers
         /// </summary>
         /// <param name="id">ID numérico do autor.</param>
         /// <returns>Retorna mensagem de sucesso.</returns>
-        [HttpDelete("{id:int}")]
+        [HttpDelete("{id}")]
         [Authorize(Roles = "admin")]
         [SwaggerOperation(Summary = "Deleta autor por ID", Description = "Requer perfil admin. Remove um autor específico com base no ID fornecido.")]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
@@ -173,19 +179,16 @@ namespace Back.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> DeleteAutor(int id)
+        public async Task<IActionResult> DeleteAutor(string id)
         {
             try
             {
-                if (id <= 0)
-                    return BadRequest(new { mensagem = "ID inválido" });
-
                 var resultado = await _autorService.DeleteAsync(id);
 
                 if (!resultado)
                     return NotFound(new { mensagem = $"Autor com ID {id} não encontrado" });
 
-                return Ok(new { mensagem = "Registro deletado com sucesso" });
+                return Ok(new { mensagem = "Autor deletado com sucesso" });
             }
             catch (ArgumentException ex)
             {

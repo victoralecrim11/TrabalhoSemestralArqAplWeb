@@ -24,19 +24,10 @@ namespace Back.Services
         /// </summary>
         Task<Usuario?> AuthenticateAsync(LoginDto dto);
 
-        /// <summary>
-        /// Obtém todos os usuários.
-        /// </summary>
         Task<IEnumerable<Usuario>> GetAllAsync();
 
-        /// <summary>
-        /// Obtém um usuário por ID.
-        /// </summary>
-        Task<Usuario?> GetByIdAsync(int id);
+        Task<Usuario?> GetByIdAsync(string id);
 
-        /// <summary>
-        /// Obtém um usuário por email para validação de login.
-        /// </summary>
         Task<Usuario?> GetByEmailAsync(string email);
 
         /// <summary>

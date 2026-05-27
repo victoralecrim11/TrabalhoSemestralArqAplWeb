@@ -3,9 +3,6 @@ using Back.Models;
 
 namespace Back.Repositories
 {
-    /// <summary>
-    /// Implementação do repository para Autores usando DataContext em memória
-    /// </summary>
     public class AutorRepository : IAutorRepository
     {
         private readonly DataContext _context;
@@ -15,47 +12,26 @@ namespace Back.Repositories
             _context = context;
         }
 
-        /// <summary>
-        /// Obtém todos os autores
-        /// </summary>
         public Task<IEnumerable<Autor>> GetAllAsync()
         {
             var autores = _context.Autores.AsEnumerable();
             return Task.FromResult(autores);
         }
 
-        /// <summary>
-        /// Obtém um autor por ID
-        /// </summary>
-        public Task<Autor?> GetByIdAsync(int id)
+        public Task<Autor?> GetByIdAsync(string id)
         {
             var autor = _context.Autores.FirstOrDefault(a => a.Id == id);
             return Task.FromResult(autor);
         }
 
-        /// <summary>
-        /// Cria um novo autor
-        /// </summary>
         public Task<Autor> CreateAsync(Autor autor)
         {
-            if (_context.Autores.Count == 0)
-            {
-                autor.Id = 1;
-            }
-            else
-            {
-                autor.Id = _context.Autores.Max(a => a.Id) + 1;
-            }
-
             autor.DataCriacao = DateTime.UtcNow;
             _context.Autores.Add(autor);
             return Task.FromResult(autor);
         }
 
-        /// <summary>
-        /// Atualiza um autor existente
-        /// </summary>
-        public Task<Autor?> UpdateAsync(int id, Autor autor)
+        public Task<Autor?> UpdateAsync(string id, Autor autor)
         {
             var autorExistente = _context.Autores.FirstOrDefault(a => a.Id == id);
 
@@ -71,10 +47,7 @@ namespace Back.Repositories
             return Task.FromResult((Autor?)autorExistente);
         }
 
-        /// <summary>
-        /// Deleta um autor
-        /// </summary>
-        public Task<bool> DeleteAsync(int id)
+        public Task<bool> DeleteAsync(string id)
         {
             var autor = _context.Autores.FirstOrDefault(a => a.Id == id);
 
@@ -85,19 +58,13 @@ namespace Back.Repositories
             return Task.FromResult(true);
         }
 
-        /// <summary>
-        /// Verifica se um autor existe
-        /// </summary>
-        public Task<bool> ExistsAsync(int id)
+        public Task<bool> ExistsAsync(string id)
         {
             var existe = _context.Autores.Any(a => a.Id == id);
             return Task.FromResult(existe);
         }
 
-        /// <summary>
-        /// Verifica se um autor tem livros
-        /// </summary>
-        public Task<bool> HasLivrosAsync(int id)
+        public Task<bool> HasLivrosAsync(string id)
         {
             var temLivros = _context.Livros.Any(l => l.AutorId == id);
             return Task.FromResult(temLivros);

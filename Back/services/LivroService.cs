@@ -48,20 +48,14 @@ namespace Back.Services
             }
         }
 
-        /// <summary>
-        /// Obtém um livro específico por ID
-        /// </summary>
-        public async Task<Livro?> GetByIdAsync(int id)
+        public async Task<Livro?> GetByIdAsync(string id)
         {
             try
             {
-                // Valida se o ID fornecido é válido (maior que 0)
-                if (id <= 0)
-                    throw new ArgumentException("ID do livro deve ser maior que 0", nameof(id));
+                if (string.IsNullOrWhiteSpace(id))
+                    throw new ArgumentException("ID do livro não pode ser vazio", nameof(id));
 
-                // Busca o livro no repositório
                 var livro = await _livroRepository.GetByIdAsync(id);
-                // Retorna o livro encontrado ou null se não existir
                 return livro;
             }
             catch (ArgumentException)
@@ -76,25 +70,18 @@ namespace Back.Services
             }
         }
 
-        /// <summary>
-        /// Obtém todos os livros de um autor específico
-        /// </summary>
-        public async Task<IEnumerable<Livro>> GetByAutorIdAsync(int autorId)
+        public async Task<IEnumerable<Livro>> GetByAutorIdAsync(string autorId)
         {
             try
             {
-                // Valida se o ID do autor é válido
-                if (autorId <= 0)
-                    throw new ArgumentException("ID do autor deve ser maior que 0", nameof(autorId));
+                if (string.IsNullOrWhiteSpace(autorId))
+                    throw new ArgumentException("ID do autor não pode ser vazio", nameof(autorId));
 
-                // Verifica se o autor existe antes de buscar seus livros
                 var autorExiste = await _autorRepository.ExistsAsync(autorId);
                 if (!autorExiste)
                     throw new InvalidOperationException($"Autor com ID {autorId} não encontrado");
 
-                // Busca todos os livros do autor
                 var livros = await _livroRepository.GetByAutorIdAsync(autorId);
-                // Retorna a coleção (pode estar vazia se o autor não tem livros)
                 return livros;
             }
             catch (ArgumentException)
@@ -129,11 +116,9 @@ namespace Back.Services
                 if (string.IsNullOrWhiteSpace(dto.Titulo))
                     throw new ArgumentException("Título do livro é obrigatório", nameof(dto.Titulo));
 
-                // Valida se o ID do autor é válido
-                if (dto.AutorId <= 0)
+                if (string.IsNullOrWhiteSpace(dto.AutorId))
                     throw new ArgumentException("ID do autor deve ser válido", nameof(dto.AutorId));
 
-                // Verifica se o autor existe no banco de dados
                 var autorExiste = await _autorRepository.ExistsAsync(dto.AutorId);
                 if (!autorExiste)
                     throw new InvalidOperationException($"Autor com ID {dto.AutorId} não encontrado");
@@ -179,64 +164,44 @@ namespace Back.Services
             }
         }
 
-        /// <summary>
-        /// Atualiza um livro existente
-        /// </summary>
-        public async Task<Livro?> UpdateAsync(int id, AtualizarLivroDto dto)
+        public async Task<Livro?> UpdateAsync(string id, AtualizarLivroDto dto)
         {
             try
             {
-                // Valida se o ID fornecido é válido
-                if (id <= 0)
-                    throw new ArgumentException("ID do livro deve ser maior que 0", nameof(id));
+                if (string.IsNullOrWhiteSpace(id))
+                    throw new ArgumentException("ID do livro não pode ser vazio", nameof(id));
 
-                // Valida se o DTO foi fornecido
                 if (dto == null)
                     throw new ArgumentNullException(nameof(dto), "Dados de atualização são obrigatórios");
 
-                // Valida se pelo menos o título foi fornecido na atualização
                 if (string.IsNullOrWhiteSpace(dto.Titulo))
                     throw new ArgumentException("Título do livro é obrigatório", nameof(dto.Titulo));
 
-                // Busca o livro existente
                 var livroExistente = await _livroRepository.GetByIdAsync(id);
-                // Verifica se o livro foi encontrado
+
                 if (livroExistente == null)
                     throw new InvalidOperationException($"Livro com ID {id} não encontrado");
 
-                // Se um novo autor foi fornecido, valida sua existência
-                if (dto.AutorId.HasValue && dto.AutorId.Value != livroExistente.AutorId)
+                if (!string.IsNullOrWhiteSpace(dto.AutorId) && dto.AutorId != livroExistente.AutorId)
                 {
-                    // Verifica se o novo autor existe
-                    var autorExiste = await _autorRepository.ExistsAsync(dto.AutorId.Value);
+                    var autorExiste = await _autorRepository.ExistsAsync(dto.AutorId);
                     if (!autorExiste)
-                        throw new InvalidOperationException($"Autor com ID {dto.AutorId.Value} não encontrado");
+                        throw new InvalidOperationException($"Autor com ID {dto.AutorId} não encontrado");
                 }
 
-                // Cria um objeto Livro com os dados atualizados
                 var livroAtualizado = new Livro
                 {
-                    // Mantém o ID do livro
                     Id = id,
-                    // Usa o novo título fornecido
                     Titulo = dto.Titulo ?? livroExistente.Titulo,
-                    // Usa o novo ID de autor ou mantém o existente
                     AutorId = dto.AutorId ?? livroExistente.AutorId,
-                    // Usa o novo ISBN ou mantém o existente
                     ISBN = dto.ISBN ?? livroExistente.ISBN,
-                    // Usa o novo ano de publicação ou mantém o existente
                     AnoPublicacao = dto.AnoPublicacao ?? livroExistente.AnoPublicacao,
-                    // Usa a nova editora ou mantém a existente
                     Editora = dto.Editora ?? livroExistente.Editora,
-                    // Usa a nova sinopse ou mantém a existente
                     Sinopse = dto.Sinopse ?? livroExistente.Sinopse,
-                    // Usa a nova categoria ou mantém a existente
                     Categoria = dto.Categoria ?? livroExistente.Categoria
                 };
 
-                // Chama o repositório para atualizar o livro
                 var resultado = await _livroRepository.UpdateAsync(id, livroAtualizado);
-                // Retorna o livro atualizado
                 return resultado;
             }
             catch (ArgumentException)
@@ -256,25 +221,18 @@ namespace Back.Services
             }
         }
 
-        /// <summary>
-        /// Deleta um livro
-        /// </summary>
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(string id)
         {
             try
             {
-                // Valida se o ID fornecido é válido
-                if (id <= 0)
-                    throw new ArgumentException("ID do livro deve ser maior que 0", nameof(id));
+                if (string.IsNullOrWhiteSpace(id))
+                    throw new ArgumentException("ID do livro não pode ser vazio", nameof(id));
 
-                // Verifica se o livro existe antes de tentar deletar
                 var livroExiste = await _livroRepository.ExistsAsync(id);
                 if (!livroExiste)
                     throw new InvalidOperationException($"Livro com ID {id} não encontrado");
 
-                // Chama o repositório para deletar o livro
                 var resultado = await _livroRepository.DeleteAsync(id);
-                // Retorna o resultado da deleção (true se sucesso)
                 return resultado;
             }
             catch (ArgumentException)

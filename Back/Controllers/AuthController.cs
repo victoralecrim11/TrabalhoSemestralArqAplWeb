@@ -71,6 +71,9 @@ namespace Back.Controllers
         /// <returns>Retorna os dados do administrador recém-criado com token JWT.</returns>
         [HttpPost("registro-admin")]
         [AllowAnonymous]
+        [SwaggerOperation(
+            Summary = "Registra um administrador",
+            Description = "Registra um administrador com perfil 'admin'. Não requer autenticação. Retorna token JWT.")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
