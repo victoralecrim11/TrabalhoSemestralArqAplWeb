@@ -1,5 +1,6 @@
 using Back.ConfigurationJWT;
 using Back.Data;
+using Back.Dtos.Autores;
 using Back.Filters;
 using Back.Models;
 using Back.Repositories;
@@ -69,6 +70,8 @@ builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IValidator<Autor>, AutorValidator>();
 builder.Services.AddScoped<IValidator<Livro>, LivroValidator>();
 builder.Services.AddScoped<IValidator<Usuario>, UsuarioValidator>();
+builder.Services.AddScoped<IValidator<CriarAutorDto>, CriarAutorDtoValidator>();
+builder.Services.AddScoped<IValidator<AtualizarAutorDto>, AtualizarAutorDtoValidator>();
 
 
 
