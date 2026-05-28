@@ -1,8 +1,11 @@
 using Back.ConfigurationJWT;
 using Back.Data;
 using Back.Filters;
+using Back.Models;
 using Back.Repositories;
 using Back.Services;
+using Back.Validators;
+using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using SwaggerThemes;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -62,6 +65,10 @@ if (!mongoSection.Exists())
 builder.Services.AddScoped<ILivroService, LivroService>();
 builder.Services.AddScoped<IAutorService, AutorService>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+
+builder.Services.AddScoped<IValidator<Autor>, AutorValidator>();
+builder.Services.AddScoped<IValidator<Livro>, LivroValidator>();
+builder.Services.AddScoped<IValidator<Usuario>, UsuarioValidator>();
 
 
 
@@ -197,7 +204,12 @@ builder.Services.AddSwaggerGen(opcoes =>
 
 });
 
-builder.Services.AddControllers();
+builder.Services.AddScoped<FluentValidatorFilter>();
+
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<FluentValidatorFilter>();
+});
 
 var app = builder.Build();
 
