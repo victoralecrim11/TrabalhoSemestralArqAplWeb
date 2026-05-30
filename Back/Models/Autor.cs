@@ -4,8 +4,10 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace Back.Models
 {
+    [BsonIgnoreExtraElements]
     public class Autor
     {
+        
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }
@@ -27,5 +29,6 @@ namespace Back.Models
 
         [BsonElement("dataAtualizacao")]
         public DateTime? DataAtualizacao { get; set; }
+
     }
 }

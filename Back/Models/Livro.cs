@@ -4,6 +4,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace Back.Models
 {
+    [BsonIgnoreExtraElements]
     public class Livro
     {
         [BsonId]
@@ -36,5 +37,7 @@ namespace Back.Models
 
         [BsonElement("dataAtualizacao")]
         public DateTime? DataAtualizacao { get; set; }
+
+
     }
 }

@@ -37,7 +37,12 @@ namespace Back.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(new { mensagem = ex.Message });
+                return BadRequest(new
+                {
+                    mensagem = ex.Message,
+                    erroReal = ex.InnerException?.Message,
+                    detalhe = ex.InnerException?.InnerException?.Message
+                });
             }
         }
 

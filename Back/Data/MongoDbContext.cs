@@ -1,8 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
+using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Driver;
 
 namespace Back.Data
@@ -18,6 +15,12 @@ namespace Back.Data
 
         public MongoDbContext(IOptions<MongoDbSettings> settings)
         {
+            // Registra convenção para ignorar elementos extras em TODAS as classes
+            var pack = new ConventionPack
+        {
+            new IgnoreExtraElementsConvention(true)
+        };
+            ConventionRegistry.Register("IgnoreExtraElements", pack, t => true);
             var client = new MongoClient(settings.Value.ConnectionString);
             _database = client.GetDatabase(settings.Value.DatabaseName);
         }

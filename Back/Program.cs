@@ -230,13 +230,27 @@ if (mongoSection.Exists())
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI(Theme.Dracula);
+    app.UseSwaggerUI(c =>
+    {
+        c.InjectStylesheet("/swagger-ui/dracula.css"); // tema Dracula (forma correta)
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "API v1");
+
+        // Desabilita o syntax highlight que causa o loop
+        c.ConfigObject.AdditionalItems["syntaxHighlight"] = false;
+    });
 }
 
 if (!app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
-    app.UseSwaggerUI(Theme.Dracula);
+    app.UseSwaggerUI(c =>
+    {
+        c.InjectStylesheet("/swagger-ui/dracula.css"); // tema Dracula (forma correta)
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "API v1");
+
+        // Desabilita o syntax highlight que causa o loop
+        c.ConfigObject.AdditionalItems["syntaxHighlight"] = false;
+    });
 }
 
 app.UseCors();

@@ -40,7 +40,12 @@ namespace Back.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(new { mensagem = ex.Message });
+                return BadRequest(new
+                {
+                    mensagem = "Erro ao obter autores",
+                    erroReal = ex.Message,
+                    detalhe = ex.InnerException?.Message
+                });
             }
         }
 
@@ -83,7 +88,12 @@ namespace Back.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(new { mensagem = ex.Message });
+                return BadRequest(new
+                {
+                    mensagem = "Erro ao obter autor",
+                    erroReal = ex.Message,
+                    detalhe = ex.InnerException?.Message
+                });
             }
         }
 

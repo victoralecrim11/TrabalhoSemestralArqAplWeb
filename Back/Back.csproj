@@ -9,6 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Contratos\**" />
+    <Content Remove="Contratos\**" />
+    <EmbeddedResource Remove="Contratos\**" />
+    <None Remove="Contratos\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="FluentValidation" Version="12.1.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.8" />
     <PackageReference Include="MongoDB.Driver" Version="3.8.1" />
@@ -23,7 +30,6 @@
 
   <ItemGroup>
     <Folder Include="ConfigurationJWT\" />
-    <Folder Include="Contratos\" />
     <Folder Include="Data\" />
     <Folder Include="Exceptions\" />
     <Folder Include="Filters\" />
