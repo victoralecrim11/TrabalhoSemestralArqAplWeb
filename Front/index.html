@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Biblioteca Digital - Acervo e Gestão de Livros"
+    />
+    <title>Biblioteca Digital</title>
+
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>"
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="grain"></div>
+
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-icon">📚</span>
+        <div>
+          <h1>Biblioteca</h1>
+          <p id="session-status" class="session-label">
+            Acesso público ao acervo
+          </p>
+        </div>
+      </div>
+      <nav aria-label="Navegação principal">
+        <button data-view="livros" class="nav-btn active">
+          <span class="nav-icon">📖</span> Livros
+        </button>
+        <button data-view="autores" class="nav-btn">
+          <span class="nav-icon">✍️</span> Autores
+        </button>
+        <button data-view="conta" class="nav-btn" id="conta-btn">
+          <span class="nav-icon">👤</span> Conta
+        </button>
+      </nav>
+    </header>
+
+    <div id="toast-container" aria-live="polite"></div>
+
+    <noscript>
+      <div
+        style="
+          padding: 20px;
+          text-align: center;
+          color: #922b21;
+          background: #fdecea;
+          font-family: sans-serif;
+        "
+      >
+        <strong>Atenção:</strong> Esta aplicação requer o JavaScript ativado
+        para funcionar corretamente.
+      </div>
+    </noscript>
+
+    <main id="app"></main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
